@@ -1,6 +1,6 @@
 // src/services/__tests__/auth.service.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { AuthService } from '../auth.service'
+import { AuthService } from '../../src/services/auth.service'
 
 // ── Mock PrismaClient ────────────────────────────────────────────
 const mockDb = {

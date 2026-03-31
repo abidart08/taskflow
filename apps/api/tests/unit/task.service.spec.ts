@@ -1,7 +1,7 @@
 // src/services/__tests__/task.service.test.ts
 import { describe, it, expect, vi } from 'vitest'
-import { TaskService } from '../task.service'
-import { ValidationError, UnprocessableError } from '../auth.service'
+import { TaskService } from '../../src/services/task.service'
+import { ValidationError, UnprocessableError } from '../../src/services/auth.service'
 
 // ── Mock PrismaClient ────────────────────────────────────────────
 const mockDb = {
