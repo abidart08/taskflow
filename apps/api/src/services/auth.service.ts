@@ -118,6 +118,32 @@ export class AuthService {
     return jwt.verify(token, JWT_SECRET) as { userId: string }
   }
 
+  async handleFailedLogin(userId: string): Promise<void> {
+    const user = await this.db.user.findUnique({
+      where: { id: userId },
+      select: { failedLogins: true, lockedUntil: true },
+    })
+    if (!user) return
+
+    // If already locked, do not increment counter
+    if (user.lockedUntil && user.lockedUntil > new Date()) return
+
+    const newFailedCount = user.failedLogins + 1
+
+    // FIX BUG-05: >= ensures lock is applied on exactly the 5th failed attempt
+    const shouldLock = newFailedCount >= MAX_FAILED_ATTEMPTS
+
+    await this.db.user.update({
+      where: { id: userId },
+      data: {
+        failedLogins: newFailedCount,
+        lockedUntil: shouldLock
+          ? new Date(Date.now() + LOCK_DURATION_MINUTES * 60 * 1000)
+          : null,
+      },
+    })
+  }
+
   private generateToken(userId: string): string {
     return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
   }

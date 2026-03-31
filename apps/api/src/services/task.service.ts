@@ -1,6 +1,6 @@
 import { PrismaClient, Status, Priority } from '@prisma/client'
 import { z } from 'zod'
-import { ForbiddenError, NotFoundError, UnprocessableError } from './auth.service'
+import { ForbiddenError, NotFoundError, UnprocessableError, ValidationError } from './auth.service'
 
 export const CreateTaskSchema = z.object({
   title: z.string().min(3).max(200),
@@ -29,8 +29,40 @@ const VALID_TRANSITIONS: Record<Status, Status[]> = {
   DONE: [],
 }
 
+// Strict transitions for validateStatusTransition (no rollback allowed)
+const STRICT_TRANSITIONS: Record<string, string[]> = {
+  TODO: ['IN_PROGRESS'],
+  IN_PROGRESS: ['DONE'],
+  DONE: [],
+}
+
 export class TaskService {
   constructor(private db: PrismaClient) {}
+
+  validateTitle(title: string): void {
+    const trimmed = title.trim()
+    if (trimmed.length === 0) {
+      throw new ValidationError('Title cannot be empty or contain only whitespace')
+    }
+    if (trimmed.length < 3) {
+      throw new ValidationError('Title must be at least 3 characters')
+    }
+    if (title.length > 100) {
+      throw new ValidationError('Title must not exceed 100 characters')
+    }
+  }
+
+  validateStatusTransition(currentStatus: string, newStatus: string): void {
+    if (currentStatus === newStatus) {
+      throw new UnprocessableError(`Cannot transition to the same status: ${currentStatus}`)
+    }
+    const allowed = STRICT_TRANSITIONS[currentStatus] ?? []
+    if (!allowed.includes(newStatus)) {
+      throw new UnprocessableError(
+        `Invalid transition: ${currentStatus} → ${newStatus}. Allowed: ${allowed.length ? allowed.join(', ') : 'none'}`
+      )
+    }
+  }
 
   async createTask(projectId: string, userId: string, input: CreateTaskInput) {
     const parsed = CreateTaskSchema.parse(input)

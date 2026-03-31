@@ -5,7 +5,9 @@
     "outDir": "dist",
     "module": "CommonJS",
     "moduleResolution": "Node",
-    "types": ["vitest/globals", "node"]
+    "types": ["vitest/globals", "node"],
+    "skipLibCheck": true,
+    "typeRoots": ["../../node_modules/@types", "./node_modules/@types"]
   },
   "include": ["src", "tests"],
   "exclude": ["node_modules", "dist"]
