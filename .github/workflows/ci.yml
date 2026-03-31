@@ -21,6 +21,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci
+      - run: npx prisma generate --schema=apps/api/src/prisma/schema.prisma
       - run: npm run lint
       - name: Type check
         run: npx tsc --noEmit --project apps/api/tsconfig.json
@@ -37,6 +38,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci
+      - run: npx prisma generate --schema=apps/api/src/prisma/schema.prisma
       - name: Run unit tests with coverage
         run: npm run test:unit
         working-directory: apps/api
