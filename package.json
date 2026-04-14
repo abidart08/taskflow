@@ -25,6 +25,8 @@
     "@typescript-eslint/parser": "^8.57.2",
     "concurrently": "^8.2.2",
     "globals": "^17.4.0",
+    "newman": "^6.2.2",
+    "newman-reporter-htmlextra": "^1.23.1",
     "typescript": "^5.4.5"
   }
 }

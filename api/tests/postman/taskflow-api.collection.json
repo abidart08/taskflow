@@ -1,0 +1,531 @@
+{
+  "info": {
+    "_postman_id": "92b851e8-146f-412a-8dec-f57b382b0a66",
+    "name": "TaskFlow API - Clase 4",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "14806278"
+  },
+  "item": [
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Registro de usuario (US-01)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', () => {\r",
+                  " pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "pm.test('Response tiene id y email', () => {\r",
+                  " const body = pm.response.json();\r",
+                  " pm.expect(body).to.have.property('id');\r",
+                  " pm.expect(body.email).to.eql('ana@ejemplo.com');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n \"name\": \"Ana García\",\r\n \"email\": \"ana@ejemplo.com\",\r\n \"password\": \"Segura123!\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "**US-01 — Registrar usuario**  \nCA verificado: El usuario se registra correctamente y retorna identificador y email  \nTipo de test: Funcional — caso positivo  \nResultado esperado: **201 Created** con `id` generado y `email = \"ana@ejemplo.com\"`"
+          },
+          "response": []
+        },
+        {
+          "name": "Login y captura automática del JWT (US-02)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => {\r",
+                  " pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "pm.test('Response contiene token JWT', () => {\r",
+                  " const body = pm.response.json();\r",
+                  " pm.expect(body).to.have.property('token');\r",
+                  " // Guardar el token en la variable de entorno\r",
+                  " pm.environment.set('token', body.token);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n \"email\": \"ana@ejemplo.com\",\r\n \"password\": \"Segura123!\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "**US-02 — Login de usuario**  \nCA verificado: El usuario se autentica correctamente y se genera un token JWT  \nTipo de test: Funcional — caso positivo  \nResultado esperado: **200 OK** con `token` en la respuesta; se almacena el token para uso en requests autenticados"
+          },
+          "response": []
+        },
+        {
+          "name": "Password incorrecto  de US-02 (edge cases)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"El body tiene la propiedad message\", function () {\r",
+                  "    const jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData).to.have.property(\"message\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n \"email\": \"ana@ejemplo.com\",\r\n \"password\": \"1234\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Email inexistente de US-02 (edge cases)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 o 404\", function () {\r",
+                  "    pm.expect([401, 404]).to.include(pm.response.code);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"El body contiene mensaje de error\", function () {\r",
+                  "    const jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData).to.have.property(\"message\");\r",
+                  "    pm.expect(jsonData.message).to.not.be.empty;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n \"email\": \"abc@ejemplo123.com\",\r\n \"password\": \"1234\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Proyectos",
+      "item": [
+        {
+          "name": "Crear proyecto (US-03)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Proyecto creado con status 201', () => {\r",
+                  " pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "pm.test('Response tiene id, name y status activo', () => {\r",
+                  " const body = pm.response.json();\r",
+                  " pm.expect(body.id).to.be.a('string');\r",
+                  " pm.expect(body.name).to.eql('Mi proyecto de testing');\r",
+                  " // Guardar ID para los siguientes requests\r",
+                  " pm.environment.set('project_id', body.id);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Mi proyecto de testing\",\r\n    \"description\": \"Creado en la práctica Clase 4\" \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/projects",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects"
+              ]
+            },
+            "description": "**US-03 — Crear proyecto**  \nCA verificado: El proyecto se crea correctamente y retorna los datos básicos esperados (id y name)  \nTipo de test: Funcional — caso positivo  \nResultado esperado: **201 Created** con `id` generado (string) y `name = \"Mi proyecto de testing\"`; se almacena `project_id` para uso posterior"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tareas",
+      "item": [
+        {
+          "name": "Crear tarea (US-05) y capturar task_id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tarea creada con status TODO', () => {\r",
+                  " pm.response.to.have.status(201);\r",
+                  " const body = pm.response.json();\r",
+                  " pm.expect(body.status).to.eql('TODO');\r",
+                  " pm.environment.set('task_id', body.id);\r",
+                  "});\r",
+                  "pm.test('Priority HIGH se persistió correctamente', () => {\r",
+                  " pm.expect(pm.response.json().priority).to.eql('HIGH');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n \"title\": \"Configurar colección Postman\",\r\n \"priority\": \"HIGH\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/tasks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "tasks"
+              ]
+            },
+            "description": "**US-05 — Crear tarea**  \nCA verificado: La tarea se crea con estado inicial TODO y persiste correctamente la prioridad enviada  \nTipo de test: Funcional — caso positivo  \nResultado esperado: 201 Created con status = \"TODO\" y priority = \"HIGH\"; se almacena task_id"
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado de tarea (US-06) - Avanzar a IN_PROGRESS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"La tarea quedó en IN_PROGRESS\", function () {\r",
+                  "    const jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.status).to.eql(\"IN_PROGRESS\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"status\": \"IN_PROGRESS\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tasks/{{task_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tasks",
+                "{{task_id}}"
+              ]
+            },
+            "description": "**US-06 — Cambiar estado de tarea**  \nCA verificado: La tarea se modificará de estado inicial TODO a IN_PROGRESS  \nTipo de test: Funcional — caso positivo  \nResultado esperado: 200"
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado de tarea (US-06) - Avanzar a DONE",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"La tarea quedó en DONE\", function () {\r",
+                  "    const jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.status).to.eql(\"DONE\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"status\": \"DONE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tasks/{{task_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tasks",
+                "{{task_id}}"
+              ]
+            },
+            "description": "**US-06 — Cambiar estado de tarea**  \nCA verificado: La tarea se modificará de estado IN_PROGRESS a DONE  \nTipo de test: Funcional — caso positivo  \nResultado esperado: 200"
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado de tarea (US-06) - Retroceder a TODO",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code es 400 o 422\", function () {\r",
+                  "    pm.expect([400, 422]).to.include(pm.response.code);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"La API rechaza retroceder de estado\", function () {\r",
+                  "    const jsonData = pm.response.json();\r",
+                  "    const mensaje = jsonData.message || jsonData.error || jsonData.msg;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"status\": \"TODO\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tasks/{{task_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tasks",
+                "{{task_id}}"
+              ]
+            },
+            "description": "**US-06 — Cambiar estado de tarea**  \nCA verificado: La tarea se modificará de estado IN_PROGRESS a TODO  \nTipo de test: Funcional — caso error handling  \nResultado esperado: 500"
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado de tarea (US-06) - Estado inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"La API rechaza valores fuera del enum\", function () {\r",
+                  "    const jsonData = pm.response.json();\r",
+                  "    const mensaje = jsonData.message || jsonData.error || jsonData.msg;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"status\": \"PENDIENTE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tasks/{{task_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tasks",
+                "{{task_id}}"
+              ]
+            },
+            "description": "**US-06 — Cambiar estado de tarea**  \nCA verificado: La tarea se modificará de estado DONE a PENDIENTE  \nTipo de test: Funcional — caso error handling  \nResultado esperado: 400 payload malformado"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Comentarios",
+      "item": []
+    }
+  ]
+}
