@@ -69,6 +69,148 @@ k6 run performance/scenarios/api-load.k6.js
 
 ---
 
+## Hito 2 — US-01 y US-02: unit tests + integration tests
+
+### Requisitos previos
+
+```bash
+# Desde la raíz
+npm install
+npx prisma generate --schema=apps/api/src/prisma/schema.prisma
+```
+
+> No se necesita base de datos real: los tests mockean los servicios.
+
+---
+
+### Unit tests (Vitest)
+
+Cubren la lógica de `AuthService` y `TaskService` de forma aislada (sin DB ni HTTP).
+
+```bash
+# Todos los unit tests con reporte de coverage
+npm run test:unit
+
+# Comando equivalente directo
+cd apps/api
+npx vitest run tests/unit --coverage
+```
+
+**Tests que pasan (≥ 5):**
+
+| Archivo | Casos |
+|---------|-------|
+| `auth.service.spec.ts` | registro, login, token, errores |
+| `auth.service.handlefailedlogin.spec.ts` | bloqueo por intentos fallidos |
+| `task.service.spec.ts` | creación y validación de tareas |
+| `task.state-machine.spec.ts` | transiciones de estado válidas e inválidas |
+
+---
+
+### Integration tests (Vitest + Supertest)
+
+Levantan la app Express completa con servicios mockeados y verifican las rutas HTTP reales.
+
+```bash
+# Todos los integration tests (desde la raíz)
+npm run test:integration
+
+# Solo las rutas de autenticación
+cd apps/api
+npx vitest run tests/integration/auth.routes.spec.ts
+
+# Solo las rutas de tareas
+cd apps/api
+npx vitest run tests/integration/tasks.routes.spec.ts
+```
+
+**Tests que pasan (≥ 3):**
+
+| Archivo | Caso | Código esperado |
+|---------|------|----------------|
+| `auth.routes.spec.ts` | registro exitoso | 201 |
+| `auth.routes.spec.ts` | email ya registrado | 409 |
+| `auth.routes.spec.ts` | login exitoso | 200 |
+| `auth.routes.spec.ts` | credenciales incorrectas | 401 |
+| `auth.routes.spec.ts` | sin token en ruta protegida | 401 |
+| `tasks.routes.spec.ts` | crea tarea y devuelve objeto | 201 |
+| `tasks.routes.spec.ts` | título vacío rechazado | 400 |
+| `tasks.routes.spec.ts` | sin token → denegado | 401 |
+| `tasks.routes.spec.ts` | retorna lista de tareas | 200 |
+| `tasks.routes.spec.ts` | sin token en GET → denegado | 401 |
+
+**Salida esperada:**
+
+```
+✓ tests/integration/tasks.routes.spec.ts (5)
+✓ tests/integration/auth.routes.spec.ts (8)
+
+Test Files  2 passed (2)
+     Tests  13 passed (13)
+```
+
+---
+
+## Tests E2E — Playwright (Page Object Model)
+
+Los tests E2E están en `e2e/playwright/tests/` y usan Page Objects definidos en `e2e/playwright/pages/`.
+
+Playwright levanta automáticamente el backend (`:3001`) y el frontend (`:5173`) antes de correr los tests, gracias a la configuración `webServer` en `playwright.config.ts`. No hace falta levantar nada manualmente.
+
+### Requisitos previos
+
+```bash
+# Instalar browsers de Playwright (solo la primera vez)
+npx playwright install
+```
+
+> También necesitás PostgreSQL corriendo y la DB migrada (`bash setup.sh`) porque
+> los tests E2E registran usuarios reales contra la API.
+
+### Comandos
+
+```bash
+# Todos los tests E2E (headless, desde la raíz)
+npm run test:e2e
+
+# Modo headed (ver el browser)
+npx playwright test --headed
+
+# Solo auth
+npx playwright test e2e/playwright/tests/auth.e2e.spec.ts
+
+# Solo projects
+npx playwright test e2e/playwright/tests/projects.e2e.spec.ts
+
+# Con trace (para depurar fallos)
+npx playwright test --trace on
+
+# Abrir el reporte HTML del último run
+npx playwright show-report
+```
+
+### Tests implementados
+
+| Archivo | Caso |
+|---------|------|
+| `auth.e2e.spec.ts` | registro redirige a `/login` |
+| `auth.e2e.spec.ts` | login exitoso redirige a `/projects` |
+| `auth.e2e.spec.ts` | credenciales incorrectas muestra error |
+| `auth.e2e.spec.ts` | usuario no autenticado redirigido desde `/projects` |
+| `projects.e2e.spec.ts` | flujo completo: registrar → login → crear proyecto → aparece en lista |
+| `projects.e2e.spec.ts` | nombre vacío no crea proyecto (formulario sigue visible) |
+
+### Si los servidores ya están corriendo
+
+```bash
+# El webServer config tiene reuseExistingServer: true para desarrollo local,
+# así que si ya tenés npm run dev activo, Playwright los reutiliza sin relanzarlos.
+npm run dev   # Terminal 1
+npx playwright test --headed   # Terminal 2
+```
+
+---
+
 ## Stack
 
 | Capa | Tecnología |
