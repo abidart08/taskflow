@@ -1,0 +1,21 @@
+Lo que salió bien:
+  
+  1. Mock architecture en Bloque A: la solución al problema de las dos instancias de AuthService es exactamente
+     la que se esperaba.
+  2. Patrón beforeAll para el mock: evita el bug clásico donde clearAllMocks destruye la referencia antes de que
+     el test la use.
+  3. expectErrorMessage() dinámico en LoginPage: reutiliza el método para dos páginas distintas inspeccionando 
+     la URL actual — buen diseño orientado a la reutilización.
+  4. Test de nombre vacío: la verificación de cardsBefore antes del intento demuestra comprensión del aislamiento
+     entre tests.
+  5. Cero selectores en los .spec.ts: encapsulamiento POM impecable.
+
+  Para arreglar:
+
+  1. testDir en Playwright: corregir de './e2e/playwright/tests' a './e2e' para alinearse con la guía.
+  2. Archivo huérfano: api/tests/integration/tasks.routes.spec.ts en la raíz está vacío (0 bytes) — es un artefacto del primer commit. Puede
+  eliminarse para mantener el repo limpio.
+  
+
+
+  *** CALIFICACIÓN: 98/100 ***
